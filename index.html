@@ -279,10 +279,12 @@
   <section class="form-section container" id="gateForm">
     <h2>Ingresa tus datos para desbloquear tu entrenamiento</h2>
     <p class="lead">Es gratis. Solo necesitamos saber quién eres para enviarte los siguientes pasos del Protocolo 3D.</p>
-    <form id="leadForm">
-      <input type="text" id="name" placeholder="Tu nombre" required>
-      <input type="email" id="email" placeholder="Tu correo electrónico" required>
-      <input type="tel" id="phone" placeholder="Tu WhatsApp" required>
+    <form id="leadForm" name="lead-vsl" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="lead-vsl">
+      <p style="display:none;"><label>No llenar: <input name="bot-field"></label></p>
+      <input type="text" id="name" name="name" placeholder="Tu nombre" required>
+      <input type="email" id="email" name="email" placeholder="Tu correo electrónico" required>
+      <input type="tel" id="phone" name="phone" placeholder="Tu WhatsApp" required>
       <button type="submit" class="cta">Desbloquear mi entrenamiento</button>
     </form>
     <p class="disclaimer">Tus datos están seguros. No compartimos tu información con terceros.</p>
@@ -337,16 +339,37 @@
     const YOUTUBE_VIDEO_ID = 'oVzSjeIzvGM';
     const WHATSAPP_NUMBER = '18132700277';
 
+    function unlockVideo() {
+      document.getElementById('videoFrame').src = 'https://www.youtube.com/embed/' + YOUTUBE_VIDEO_ID + '?autoplay=1';
+      document.getElementById('videoSection').style.display = 'block';
+      document.getElementById('videoLocked').style.display = 'none';
+      document.getElementById('gateForm').style.display = 'none';
+    }
+
+    window.addEventListener('DOMContentLoaded', function () {
+      const saved = localStorage.getItem('me_unlocked');
+      if (saved === 'true') {
+        unlockVideo();
+      }
+    });
+
     document.getElementById('leadForm').addEventListener('submit', function (e) {
       e.preventDefault();
       const name = document.getElementById('name').value;
       const email = document.getElementById('email').value;
       const phone = document.getElementById('phone').value;
 
-      document.getElementById('videoFrame').src = 'https://www.youtube.com/embed/' + YOUTUBE_VIDEO_ID + '?autoplay=1';
-      document.getElementById('videoSection').style.display = 'block';
-      document.getElementById('videoLocked').style.display = 'none';
-      document.getElementById('gateForm').style.display = 'none';
+      const formData = new FormData(document.getElementById('leadForm'));
+      fetch('/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(formData).toString()
+      }).catch(() => {});
+
+      localStorage.setItem('me_unlocked', 'true');
+      localStorage.setItem('me_name', name);
+
+      unlockVideo();
 
       const mensaje = encodeURIComponent(
         `Hola, soy ${name}.\nCorreo: ${email}\nQuiero información del Protocolo 3D — acabo de ver el entrenamiento.`
